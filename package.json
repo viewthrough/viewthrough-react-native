@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jonathannoelschaefer-code/ugc-lift.git",
+    "url": "git+https://github.com/jonathannoelschaefer-code/ugc-lift.git",
     "directory": "packages/sdk"
   },
   "homepage": "https://viewthrough.app",
