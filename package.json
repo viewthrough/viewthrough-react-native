@@ -5,10 +5,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonathannoelschaefer-code/ugc-lift.git",
-    "directory": "packages/sdk"
+    "url": "git+https://github.com/viewthrough/viewthrough-react-native.git"
   },
-  "homepage": "https://viewthrough.app",
+  "homepage": "https://viewthrough.app/docs/sdk",
   "keywords": ["viewthrough", "analytics", "attribution", "react-native", "expo", "ugc", "tiktok"],
   "type": "module",
   "main": "./dist/cjs/index.cjs",
