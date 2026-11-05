@@ -1,6 +1,6 @@
 {
   "name": "@viewthrough/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Viewthrough SDK — installs, onboarding, paywall and checkout events from your app, batched and offline-safe. Works in React Native, Expo, web and Node.",
   "license": "MIT",
   "repository": {

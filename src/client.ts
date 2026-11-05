@@ -13,7 +13,7 @@ import { COUNT_EVENTS } from "./types.js";
 import { uuid } from "./uuid.js";
 
 export const SDK_NAME = "@viewthrough/sdk";
-export const SDK_VERSION = "0.1.0";
+export const SDK_VERSION = "0.1.1";
 export const DEFAULT_ENDPOINT = "https://viewthrough.app/api/v1/events";
 
 type Persisted = {
@@ -133,6 +133,10 @@ export class Viewthrough {
     const clean: Record<string, string | number | boolean> = {};
     for (const [k, v] of Object.entries(attribution)) {
       if (v === null || v === undefined || v === "") continue;
+      if (!PROP_KEY_RE.test(k)) {
+        this.warn(`setAttribution: key "${k.slice(0, 40)}" ignored: letters, digits and _ only (max 64)`);
+        continue;
+      }
       if (typeof v === "string") clean[k] = v.slice(0, 256);
       else if (typeof v === "number" || typeof v === "boolean") clean[k] = v;
     }
@@ -237,7 +241,7 @@ export class Viewthrough {
     const q: QueuedEvent = { event_id: uuid(), event, ts: at.toISOString() };
     const uid = userId ?? this.state?.user_id;
     if (uid) q.user_id = uid;
-    const clean = cleanProps(props);
+    const clean = cleanProps(props, (m) => this.warn(m));
     if (clean) q.props = clean;
     const { queue, dropped } = push(this.queue, q, this.opts.maxQueue);
     this.queue = queue;
@@ -353,11 +357,23 @@ export class Viewthrough {
 /** flushAt decides when to send; the batch itself takes up to the server maximum. */
 const SERVER_MAX_BATCH_HINT = 100;
 
-function cleanProps(props: Props | undefined): Record<string, string | number | boolean> | undefined {
+/**
+ * The server accepts only flat props with keys of letters, digits and `_`
+ * (max 64) — and rejects the WHOLE batch (HTTP 400, install included) when
+ * one key is off. So bad keys are dropped here, with a warning, instead of
+ * taking the install down with them.
+ */
+const PROP_KEY_RE = /^[A-Za-z0-9_]{1,64}$/;
+
+function cleanProps(props: Props | undefined, warn?: (msg: string) => void): Record<string, string | number | boolean> | undefined {
   if (!props) return undefined;
   const out: Record<string, string | number | boolean> = {};
   for (const [k, v] of Object.entries(props)) {
     if (v === null || v === undefined) continue;
+    if (!PROP_KEY_RE.test(k)) {
+      warn?.(`prop key "${k.slice(0, 40)}" ignored: letters, digits and _ only (max 64)`);
+      continue;
+    }
     if (typeof v === "string") out[k] = v.slice(0, 256);
     else if (typeof v === "number" && Number.isFinite(v)) out[k] = v;
     else if (typeof v === "boolean") out[k] = v;

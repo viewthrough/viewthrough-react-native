@@ -173,6 +173,22 @@ describe("Viewthrough client", () => {
     vt.close();
   });
 
+  it("drops prop keys the server would reject, keeps the rest", async () => {
+    const { fn, calls } = fakeFetch();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const vt = new Viewthrough({ key: KEY, fetch: fn, storage: memoryStorage(), platform: "ios", trackAppOpen: false });
+    await vt.ready;
+    vt.paywallShown({ surface: "onboarding", "bad key": "x", ["k".repeat(65)]: 1 });
+    vt.setAttribution({ acquisition_source: "tiktok", "utm campaign": "nope" });
+    await flushMicrotasks();
+    await vt.flush();
+    const events = calls[0]!.body.events as Array<{ event: string; props?: Record<string, unknown> }>;
+    expect(events.find((e) => e.event === "paywall_shown")?.props).toEqual({ surface: "onboarding" });
+    expect(events.find((e) => e.event === "set_attribution")?.props).toEqual({ acquisition_source: "tiktok" });
+    expect(warn).toHaveBeenCalledTimes(3);
+    warn.mockRestore();
+  });
+
   it("rejects a key that is not an SDK key", () => {
     expect(() => new Viewthrough({ key: "vt_nope", fetch: fakeFetch().fn })).toThrow(/vts_/);
   });
